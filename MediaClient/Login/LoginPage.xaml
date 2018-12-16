@@ -1,0 +1,40 @@
+﻿<Page x:Class="MediaClient.LoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:MediaClient"
+      mc:Ignorable="d" 
+      d:DesignHeight="250" d:DesignWidth="300"
+      Title="Login">
+
+    <DockPanel>
+        <Label DockPanel.Dock="Top" HorizontalAlignment="Center" Foreground="Blue" FontSize="20" >Welcome to Media Client!</Label>
+        <Label DockPanel.Dock="Top" HorizontalAlignment="Center" Foreground="Blue" >Please Login to continue.</Label>
+        <Label DockPanel.Dock="Top" HorizontalAlignment="Center" Foreground="Red" FontSize="15">To enter as Test User just click 'LOGIN'</Label>
+
+        <Grid DockPanel.Dock="Top" DataContext="{Binding UserInfo}" FocusManager.FocusedElement="{Binding ElementName=tb_userName}">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="0.1*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="20">User name:</Label>
+            <Label Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="20">User pasword:</Label>
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="2" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="20" MinWidth="200"></TextBox>
+            <PasswordBox PasswordChanged="PasswordChangedEvent" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="20" MinWidth="200" PasswordChar="*"></PasswordBox>
+        </Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Button Command="{Binding LoginCommand}" HorizontalAlignment="Center" FontSize="20" VerticalAlignment="Center">LOGIN</Button>
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20">
+                <Hyperlink Command="{Binding RegisterCommand}">Register</Hyperlink>
+            </Label>
+        </StackPanel>
+    </DockPanel>
+
+
+</Page>

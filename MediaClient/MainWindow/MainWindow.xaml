@@ -1,0 +1,41 @@
+﻿<Window x:Class="MediaClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MediaClient"
+        mc:Ignorable="d"
+        Title="MEDIA CLIENT" MinHeight="400" MinWidth="600" Height="800" Width="1000" WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <local:MainWindowViewModel/>
+    </Window.DataContext>
+    <DockPanel Loaded="Window_Loaded">
+        <Menu MinHeight="20" DockPanel.Dock="Top">
+            <MenuItem Header="_Menu">
+                <MenuItem Header="_Restore Settings"></MenuItem>
+                <MenuItem Header="_Exit" Click="menuExitClick"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <ToolBar DockPanel.Dock="Top" Visibility="Visible">
+            <Separator/>
+            <Button Content="Login" Visibility="Visible" Command="{Binding LoginCommand}"/>
+            <Separator/>
+            <Button Content="Upload file" Visibility="Collapsed"/>
+            <Separator/>
+        </ToolBar>
+        <DockPanel DockPanel.Dock="Bottom" DataContext="{Binding StatusBarInfo}">
+            <StatusBar  x:Name="statusBar" MinWidth="500" MaxWidth="500">
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Message}" x:Name="statusBarTextBox" TextWrapping="NoWrap"/>
+                </StatusBarItem>
+            </StatusBar>
+            <Label>Progress bar value:</Label>
+            <Label DockPanel.Dock="Right">Result status [OK/Error]</Label>
+            <ProgressBar Minimum="{Binding Min}" Maximum="{Binding Max}" Value="{Binding Progress}" Height="20" ></ProgressBar>
+        </DockPanel>
+        <Frame x:Name="mainFrame" Background="MintCream" NavigationUIVisibility="Hidden">
+
+        </Frame>
+    </DockPanel>
+
+</Window>

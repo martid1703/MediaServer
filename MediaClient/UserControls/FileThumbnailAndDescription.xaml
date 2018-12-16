@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="MediaClient.UserControls.FileThumbnailAndDescription"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MediaClient.UserControls"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="400">
+    <Border BorderBrush="Blue" BorderThickness="1">
+        <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <DockPanel.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Watch"></MenuItem>
+                    <MenuItem Header="Rename"></MenuItem>
+                    <MenuItem Header="Delete"></MenuItem>
+                </ContextMenu>
+            </DockPanel.ContextMenu>
+            <TextBlock x:Name="tbFileName" DockPanel.Dock="Bottom" FontSize="10" TextWrapping="Wrap" />
+            <Image x:Name="imgThumbnail" />
+        </DockPanel>
+    </Border>
+</UserControl>
