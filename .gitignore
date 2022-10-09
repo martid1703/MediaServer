@@ -1,5 +1,3 @@
-*.mdf
-*.ldf
 *.mp4
 packages/
 bin/
