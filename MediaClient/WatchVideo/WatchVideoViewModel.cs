@@ -1,155 +1,134 @@
 ﻿using DTO;
-using MediaClient.Exceptions;
-using MediaClient.WebApi;
+using MediaClient.WatchVideo;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace MediaClient
 {
-    public class WatchVideoViewModel : INotifyPropertyChanged
+    public class WatchVideoViewModel : FrameworkElement, INotifyPropertyChanged
     {
         #region Variables
+
         private CUserInfo _userInfo;
         private CFileInfo _fileInfo;
-        private Uri _videoSource;// video location to play
+        private Uri _videoSource; // video location to play
         private String _userFolder;
-        private FileCatalogViewModel _fcvm;
-        public CUserInfo UserInfo
+        private FileCatalogViewModel _fileCatalogViewModel;
+        private TimeSpan _streamPosition;
+        private static Double _seekPosition;
+        private Boolean _sliderDragEnd;
+        private StatusUpdate _statusUpdate; // link to status bar to show progress messages
+        private CancellationToken ct;
+        public MediaElement myMedia;
+
+        private Queue<FileInfo> watchQueue; // concurrent queue for chunks of the video to play
+        private VideoWatcher _videoWatcher;
+        private readonly CancellationTokenSource _cts;
+
+        //----------------------------------------------------
+        public static readonly DependencyProperty SeekPositionProperty
+            = DependencyProperty.Register("SeekPosition", typeof(Double), typeof(WatchVideoViewModel));
+
+        public Double SeekPosition
         {
-            get { return _userInfo; }
-            set
-            {
-                _userInfo = value;
-                OnPropertyChanged("UserInfo");
-            }
-        }
-        public CFileInfo FileInfo
-        {
-            get { return _fileInfo; }
-            set
-            {
-                _fileInfo = value;
-                OnPropertyChanged("FileInfo");
-            }
-        }
-        public Uri VideoSource
-        {
-            get { return _videoSource; }
-            set
-            {
-                _videoSource = value;
-                OnPropertyChanged("VideoSouce");
-            }
+            get { return (Double)GetValue(SeekPositionProperty); }
+            set { SetValue(SeekPositionProperty, value); }
         }
 
         #endregion
 
-
         public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName]string prop = "")
+
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(prop));
         }
 
-
         #region EventHandlersForMediaElement
+
         public event EventHandler PlayRequested;
         public event EventHandler PauseRequested;
         public event EventHandler StopRequested;
+
         #endregion
-
-
 
         #region ICommand
 
-        private ICommand _watchCommand;
-        public ICommand PlayCommand { get => _watchCommand; set => _watchCommand = value; }
-
-        private void Play(object obj)
-        {
-            var sc = SynchronizationContext.Current;
-
-            sc.Post(delegate
-            {
-                if (this.PlayRequested != null)
-                {
-                    this.PlayRequested(this, EventArgs.Empty);
-                }
-            }, null);
-        }
-
-        private ICommand _pauseCommand;
-        public ICommand PauseCommand { get => _pauseCommand; set => _pauseCommand = value; }
-
-        private void Pause(object obj)
-        {
-            var sc = SynchronizationContext.Current;
-
-            sc.Post(delegate
-            {
-                if (this.PauseRequested != null)
-                {
-                    this.PauseRequested(this, EventArgs.Empty);
-                }
-            }, null);
-        }
-
-        private ICommand _stopCommand;
-        public ICommand StopCommand { get => _stopCommand; set => _stopCommand = value; }
-
-        private void Stop(object obj)
-        {
-            var sc = SynchronizationContext.Current;
-
-            sc.Post(delegate
-            {
-                if (this.StopRequested != null)
-                {
-                    this.StopRequested(this, EventArgs.Empty);
-                }
-
-                FileCatalogPage fcp = new FileCatalogPage();
-                fcp.DataContext = _fcvm;
-                Switcher.Switch(fcp);
-            }, null);
-        }
-
-       
-        #endregion
+        public ICommand PlayCommand { get; set; }
+        public ICommand PauseCommand { get; set; }
+        public ICommand StopCommand { get; set; }
 
         #region CTORs
-        public WatchVideoViewModel(CUserInfo userInfo, CFileInfo fileInfo, FileCatalogViewModel fcvm)
+
+        public WatchVideoViewModel(
+            CUserInfo userInfo, 
+            CFileInfo fileInfo, 
+            FileCatalogViewModel fileCatalogViewModel,
+            StatusUpdate statusUpdate)
         {
-            _fcvm = fcvm;
+            _cts = new CancellationTokenSource();
+
+            _fileCatalogViewModel = fileCatalogViewModel;
             _userInfo = userInfo;
             _fileInfo = fileInfo;
-            _userFolder = @"C:\Users\dmitry.martirosyan\Source\Workspaces\martirosyan.workspace\MediaServer\MediaClient\UserFiles";
+            _statusUpdate = statusUpdate;
 
-            VideoSource = new Uri("http://localhost:86/" + $"api/file/PlayAsync?fileId={fileInfo.Guid}");// test on IIS
-            //VideoSource = new Uri("http://localhost:50352/" + $"api/file/PlayAsync?fileId={fileInfo.Guid}");// test on IIS Express
-            //VideoSource = new Uri(Path.Combine(_userFolder, _fileInfo.Name), UriKind.Absolute);
-
+            watchQueue = new Queue<FileInfo>();
             PlayCommand = new RelayCommand(new Action<object>(Play));
             PauseCommand = new RelayCommand(new Action<object>(Pause));
             StopCommand = new RelayCommand(new Action<object>(Stop));
-
-            // call WatchVideo method, which should return stream data to some property like VideoStream,
-            // which will be binded to MediaElement source
         }
         #endregion
 
+        private void Play(object obj)
+        {
+            Writer writer = new Writer(_fileInfo, _userInfo, watchQueue, _statusUpdate);
+            Int64 startPosition = (Int64)((SeekPosition / 100) * _fileInfo.Size);
+            Reader reader = new Reader(myMedia, watchQueue);
 
-       
+            var sc = SynchronizationContext.Current;
+            _videoWatcher = new VideoWatcher(myMedia, writer, reader, _cts, sc);
+            Task.Run(()=>_videoWatcher.Play(startPosition), _cts.Token);
+        }
 
+        private void Pause(object obj)
+        {
+            _videoWatcher.Pause();
+        }
+
+        private void Stop(object obj)
+        {
+            _cts.Cancel(); // to stop watcher/writer/reader
+            _videoWatcher.Stop();
+            
+            FileCatalogPage fcp = new FileCatalogPage();
+            fcp.DataContext = _fileCatalogViewModel;
+            Switcher.Switch(fcp);
+        }
+
+        public void SliderDragEnded()
+        {
+            // Seek position already set by Dependency property
+            //Stop the media
+            myMedia.Stop();
+            // Clear the queue
+            watchQueue.Clear();
+            // Stop writer & reader threads
+            _cts.Cancel();
+            _cts.Dispose();
+
+            // Start from new position
+            Play(null);
+        }
+        #endregion
     }
 }

@@ -31,7 +31,7 @@ namespace VideoProcessing
 
             process.Start();
 
-            bool isClosed = process.WaitForExit(1000);
+            bool isClosed = process.WaitForExit(2000);
             if (!process.HasExited)
             {
             process.Kill();

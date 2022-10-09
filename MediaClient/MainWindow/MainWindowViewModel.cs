@@ -39,11 +39,11 @@ namespace MediaClient
             _statusBarInfo = new StatusUpdate();
 
             // todo: get user settings from "UserSettings.xml" and write them to the UserSettings class
-            UserSettings.ChunkSize = 500000;// 500 kB
+            UserSettings.ChunkSize = 500000;// bytes
             UserSettings.UserFolder = System.IO.Path.GetFullPath(
                 System.IO.Path.Combine(Environment.CurrentDirectory, "..\\..\\" + "UserFiles\\"));
 
-            LoginCommand = new RelayCommand(new Action<object>(Login));
+            LoginCommand = new RelayCommand(Login);
 
         }
 

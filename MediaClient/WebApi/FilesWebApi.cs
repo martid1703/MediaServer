@@ -161,7 +161,9 @@ namespace MediaClient.WebApi
             client.DefaultRequestHeaders.Add("isLastChunk", isLastChunkJson);
 
             HttpContent content = new ByteArrayContent(chunk);
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            //content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+           content.Headers.ContentType = new MediaTypeHeaderValue("video/mp4");
+
 
             HttpResponseMessage response = await client.GetAsync($"api/file/DownloadChunkAsync");
             return response;

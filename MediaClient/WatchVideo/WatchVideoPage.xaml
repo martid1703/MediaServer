@@ -13,6 +13,14 @@
             <Button MinWidth="50" Command="{Binding PauseCommand}">PAUSE</Button>
             <Button MinWidth="50" Command="{Binding StopCommand}">STOP</Button>
             <Button MinWidth="100" Command="{Binding PlayCommand}">PLAY</Button>
+            <TextBlock
+                Grid.Column="0" Grid.Row="2" Margin="10" 
+                FontSize="12">CurrentState:</TextBlock>
+
+            <TextBlock 
+                x:Name="mediaStateTextBlock"
+                Grid.Column="1" Grid.Row="2" Margin="0,10,0,0" MinWidth="100"
+                FontSize="12"></TextBlock>
 
             <!-- Volume slider. This slider allows a Volume range between 0 and 1. -->
             <TextBlock VerticalAlignment="Center" Margin="5"  >Volume</TextBlock>
@@ -26,10 +34,22 @@
 
             <!-- Seek to slider. Ths slider allows you to jump to different parts of the media playback. -->
             <TextBlock Margin="5"  VerticalAlignment="Center">Seek To</TextBlock>
-            <!--<Slider Name="timelineSlider" ValueChanged="SeekToMediaPosition" VerticalAlignment="Center"/>-->
+            <Slider Name="timelineSlider" 
+                    Minimum="0" Maximum="100" 
+                    SmallChange="1" LargeChange="10"
+                    TickPlacement="BottomRight" TickFrequency="5"
+                    Value="{Binding SeekPosition, Mode=TwoWay}"
+                    Thumb.DragCompleted="SliderDragEnded" 
+                    VerticalAlignment="Center"
+                    IsSnapToTickEnabled="True"/>
         </DockPanel>
         <Border BorderBrush="Blue" BorderThickness="1">
-            <MediaElement x:Name="myMediaElement" Source="{Binding VideoSource}" LoadedBehavior="Manual" UnloadedBehavior="Stop" Volume="{Binding ElementName=volumeSlider, Path=Value}" Loaded="myMediaElement_Loaded" />
+            <MediaElement x:Name="myMediaElement" 
+                          Source="{Binding VideoSource}" 
+                          LoadedBehavior="Manual" UnloadedBehavior="Stop" 
+                          Volume="{Binding ElementName=volumeSlider, Path=Value}" 
+                          Loaded="myMediaElement_Loaded" MediaEnded="MyMediaElement_MediaEnded"
+                          />
         </Border>
 
     </DockPanel>

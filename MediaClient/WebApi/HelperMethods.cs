@@ -19,8 +19,8 @@ namespace MediaClient.WebApi
         public static void SetupHttpClient(out HttpClient client)
         {
             client = new HttpClient();
-            //client.BaseAddress = new Uri("http://localhost:50352/"); //debug from VS
-            client.BaseAddress = new Uri("http://localhost:86/"); // test on IIS
+            client.BaseAddress = new Uri("http://localhost:50352/"); //debug from VS
+            //client.BaseAddress = new Uri("http://localhost:86/"); // test on IIS
 
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

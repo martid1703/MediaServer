@@ -124,7 +124,7 @@ namespace MediaClient
             SelectedFile.Views += 1;
 
             var sc = SynchronizationContext.Current;
-            WatchVideoViewModel wvvm = new WatchVideoViewModel(UserInfo, SelectedFile, this);
+            WatchVideoViewModel wvvm = new WatchVideoViewModel(UserInfo, SelectedFile, this, _statusUpdate);
 
             sc.Post(delegate
             {

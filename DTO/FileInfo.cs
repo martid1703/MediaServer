@@ -12,6 +12,9 @@ namespace DTO
         public string Name { get; set; }
         public string Path { get; set; }
         public Int64 Size { get; set; }// in bytes
+
+        public TimeSpan Duration { get; set; }// duration of the video file, if any
+
         public Guid UserId { get; set; }
         public bool IsPublic { get; set; }
         public byte[] Hash { get; set; }
@@ -20,6 +23,8 @@ namespace DTO
         public Int32 Likes { get; set; }
         public Int32 Dislikes { get; set; }
         public byte[] Thumbnail { get; set; }
+
+        public Int64 PlayIndex { get; set; }
 
         public List<CPlaylistInfo> playlists { get; set; }
 

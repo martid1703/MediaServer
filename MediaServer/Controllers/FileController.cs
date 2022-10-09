@@ -204,15 +204,17 @@ namespace MediaServer.Controllers
 
                     responseMsg = $"Chunk for file:{newFile.Name} successfully uploaded!";
 
-                    // calculate Hash only if file has been loaded 100%
                     if (isLastChunk)
                     {
+                        // calculate Thumbnail for video only if file has been loaded 100%
+                        CreateThumbnail(newFile);
+
                         // calculate Hash only if file has been loaded 100%
-                        await Task.Factory.StartNew(() => HashFile(newFile)).ContinueWith(delegate
-                          {
-                            // calculate Thumbnail for video only if file has been loaded 100%
-                            CreateThumbnail(newFile);
-                          });
+                        //await Task.Factory.StartNew(() => HashFile(newFile)).ContinueWith(delegate
+                        //  {
+                        //  });
+
+                        HashFile(newFile);
 
                         responseMsg = $"File  successfully uploaded!";
                     }
@@ -258,7 +260,7 @@ namespace MediaServer.Controllers
             Task.Run(() =>
             {
                 string fileName = Path.ChangeExtension(file.Name, ".jpg");
-                bool isOk=VideoThumbnail.CreateThumbnail(
+                bool isOk = VideoThumbnail.CreateThumbnail(
                   Path.Combine(file.Path + file.Name),
                   Path.Combine(file.Path, "Thumbnails", fileName));
             });
@@ -356,6 +358,7 @@ namespace MediaServer.Controllers
                 using (fs)
                 {
                     // seek position as per user file load size
+                    // todo: use chunk counter or smth, because user file size can differ from server file size (cuz OS, file systems...)
                     fs.Position = fileInfo.Size;
 
                     // read next chunk
@@ -364,7 +367,9 @@ namespace MediaServer.Controllers
 
                     // pass byte chunk to response.content
                     response.Content = new ByteArrayContent(buffer);
-                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    //response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("video/mp4");
+
                     return response;
                 }
             }
@@ -375,9 +380,63 @@ namespace MediaServer.Controllers
 
         }
 
+        [HttpGet]
+        [Authorize]
+        // this is to be used when stream watching video, allowing to seek
+        public HttpResponseMessage WatchChunkAsync()
+        {
+            try
+            {
+                SetUserDetails();
+                HttpResponseMessage response = new HttpResponseMessage();
+
+                CFile file = _fileContext.GetByFileId(fileInfo.Guid);
+
+                FileStream fs = new FileStream(
+                    file.Path + file.Name, FileMode.Open, FileAccess.Read, FileShare.Read, chunkSize, true);
+                FileInfo fi = new FileInfo(file.Name);
+                
+                // nothin to send here
+                if (fs.Length < fileInfo.Size)
+                {
+                    Request.CreateResponse(HttpStatusCode.BadRequest, "Index of fileInfo.Size > file.Length on server");
+                    return response;
+                }
+
+                Int32 remaining = (Int32)(fs.Length - fileInfo.Size);
+                if (remaining < chunkSize)
+                {
+                    chunkSize = remaining;
+                }
+
+                using (fs)
+                {
+                    // seek position as per user file load size
+                    // todo: use chunk counter or smth, because user file size can differ from server file size (cuz OS, file systems...)
+                    fs.Position = fileInfo.Size;
+
+                    // read next chunk
+                    byte[] buffer = new byte[chunkSize];
+                    fs.ReadAsync(buffer, 0, chunkSize);
+
+                    // pass byte chunk to response.content
+                    response.Content = new ByteArrayContent(buffer);
+                    //response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("video/mp4");
+
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
 
         [HttpGet]
         // todo: how to make async? 'fileStreamDownload.WriteToStream' is awaitable, but error: "cannot await method group"?
+        // overloaded method to play from given index, default position = 0
         public HttpResponseMessage PlayAsync(Guid fileId)
         {
             //Tuple<string, string> credentials = HelperMethods.NamePasswordFromAuthHeader(Request.Headers.Authorization.Parameter);
@@ -396,6 +455,7 @@ namespace MediaServer.Controllers
 
             return response;
         }
+
 
 
         [HttpGet]
@@ -477,11 +537,11 @@ namespace MediaServer.Controllers
                     if (File.Exists(Path.Combine(file.Path, "Thumbnails", Path.ChangeExtension(file.Name, ".jpg"))))
                     {
                         // try rename physical thumbnail of the file
-                        File.Move(Path.Combine(file.Path,"Thumbnails", Path.ChangeExtension(file.Name, ".jpg")), Path.Combine(file.Path, "Thumbnails", Path.ChangeExtension(newName, ".jpg")));
+                        File.Move(Path.Combine(file.Path, "Thumbnails", Path.ChangeExtension(file.Name, ".jpg")), Path.Combine(file.Path, "Thumbnails", Path.ChangeExtension(newName, ".jpg")));
                     }
 
-                        // try rename record in DB
-                        file.Name = newName;
+                    // try rename record in DB
+                    file.Name = newName;
                     if (_fileContext.Update(file) > 0)
                     {
                         Request.CreateResponse(HttpStatusCode.OK, $"File has been renamed.");

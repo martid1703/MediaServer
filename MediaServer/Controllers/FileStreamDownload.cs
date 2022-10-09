@@ -15,28 +15,41 @@ namespace MediaServer.Controllers
     public class FileStreamDownload
     {
         private readonly string _filename;
+        private Int64 _streamPosition;// to start video stream from given position
 
         public FileStreamDownload(string fileName)
         {
             _filename = fileName;
         }
 
+        public FileStreamDownload(string fileName, Int64 streamPosition)
+        {
+            _filename = fileName;
+            _streamPosition = streamPosition;
+        }
+
         public async void WriteToStreamAsync(Stream outputStream, HttpContent content, TransportContext context)
         {
+                FileStream video=null;
             try
             {
-                var buffer = new byte[65536];
-
-                using (var video = File.Open(_filename, FileMode.Open, FileAccess.Read))
+                Int32 bytesToRead = 65536;
+                var buffer = new byte[bytesToRead];
+                using (video = File.Open(_filename, FileMode.Open, FileAccess.Read))
                 {
-                    var length = (Int32)video.Length;
+
+                    Int64 remainingLength = video.Length-video.Position;
                     var bytesRead = 1;
 
-                    while (length > 0 && bytesRead > 0)
+                    while (remainingLength > 0 && bytesRead > 0)
                     {
-                        bytesRead = video.Read(buffer, 0, Math.Min(length, buffer.Length));
+                        if (bytesToRead>remainingLength)
+                        {
+                            bytesToRead = (Int32)remainingLength;
+                        }
+                        bytesRead = video.Read(buffer, 0, bytesToRead);
                         await outputStream.WriteAsync(buffer, 0, bytesRead);
-                        length -= bytesRead;
+                        remainingLength -= bytesRead;
                     }
                 }
             }
@@ -46,9 +59,11 @@ namespace MediaServer.Controllers
             }
             finally
             {
+                //video.Close();
                 outputStream.Close();
             }
         }
+
     }
 
 

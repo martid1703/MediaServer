@@ -22,8 +22,6 @@ namespace MediaServer.Controllers
         private readonly PlaylistContext _playlistContext = new PlaylistContext();
         private readonly FileContext _fileContext = new FileContext();
 
-
-
         #region IUserController
         [HttpPost]
         public HttpResponseMessage Register(CUserInfo userInfo)

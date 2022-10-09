@@ -28,7 +28,6 @@ namespace MediaClient
             mainWindowVM = new MainWindowViewModel();
             this.DataContext = mainWindowVM;
             Switcher.pageSwitcher = this;
-
         }
 
         public void Navigate(Page nextPage)

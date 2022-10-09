@@ -214,7 +214,6 @@ namespace MediaClient
                 string responseMsg = "";
 
                 // generate hash of the file
-                // todo: make it multithreaded
                 //Console.WriteLine("Calculating file hash...");
                 byte[] hash = MD5Generator.MD5Hash(fileInfo.FullName);
                 //Console.WriteLine($"{fileInfo.Name} hash = {BitConverter.ToString(hash)}");

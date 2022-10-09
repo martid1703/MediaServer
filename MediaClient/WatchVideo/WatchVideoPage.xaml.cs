@@ -25,23 +25,39 @@ namespace MediaClient
             InitializeComponent();
 
             DataContext = wvvm;
+
+            // give link to media element into view model
+            wvvm.myMedia = this.myMediaElement;
+
             wvvm.PlayRequested += (sender, e) =>
               {
-                  this.myMediaElement.Play();
+                  //this.myMediaElement.Play();
+
               };
             wvvm.PauseRequested += (sender, e) =>
             {
-                this.myMediaElement.Pause();
+                //this.myMediaElement.Pause();
             };
             wvvm.StopRequested += (sender, e) =>
             {
-                this.myMediaElement.Stop();
+                //this.myMediaElement.Stop();
             };
         }
 
         private void myMediaElement_Loaded(object sender, RoutedEventArgs e)
         {
-            this.myMediaElement.Play();
+            //this.myMediaElement.Play();
+        }
+
+        private void SliderDragEnded(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            ((WatchVideoViewModel)this.DataContext).SliderDragEnded();
+
+        }
+
+        private void MyMediaElement_MediaEnded(object sender, RoutedEventArgs e)
+        {
+            //((WatchVideoViewModel)this.DataContext).MediaEnded();
         }
     }
 }

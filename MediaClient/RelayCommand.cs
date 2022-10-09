@@ -29,7 +29,7 @@ namespace MediaClient
             }
             else
             {
-                _action("Hello World");
+                _action(null);
             }
         }
 
