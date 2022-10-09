@@ -1,7 +1,6 @@
 *.mdf
 *.ldf
 *.mp4
-*/App_Data/
 packages/
 bin/
 obj/
